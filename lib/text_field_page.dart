@@ -5,13 +5,24 @@ class TextFieldPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String showText = "";
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("テキストフィールドを使ってみよう！"),
       ),
-      body: const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: TextField(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              onChanged: ((value) {
+                showText = value;
+              }),
+            ),
+          ),
+          Text(showText),
+        ],
       ),
     );
   }
