@@ -26,17 +26,25 @@ class _MyTextFieldState extends State<MyTextFiled> {
 
   @override
   Widget build(BuildContext context) {
+    String tmpText = "";
+
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: TextField(
             onChanged: ((value) {
-              setState(() {
-                showText = value;
-              });
+              tmpText = value;
             }),
           ),
+        ),
+        IconButton(
+          onPressed: () {
+            setState(() {
+              showText = tmpText;
+            });
+          },
+          icon: const Icon(Icons.arrow_downward),
         ),
         Text(showText),
       ],
