@@ -1,4 +1,3 @@
-import 'package:beginner_training_flutter/second_page.dart';
 import 'package:flutter/material.dart';
 
 class FirstPage extends StatelessWidget {
@@ -15,13 +14,7 @@ class FirstPage extends StatelessWidget {
             IconButton(
               onPressed: () {
                 // 画面遷移には Navigator を使う
-                Navigator.push(
-                  context,
-                  // 次の画面を MaterialPageRoute に渡して Route を作り，それを表示させてる
-                  MaterialPageRoute<void>(
-                    builder: (BuildContext context) => const SecondPage(),
-                  ),
-                );
+                Navigator.pushNamed(context, "/second");
               },
               icon: const Icon(Icons.arrow_forward),
             )
