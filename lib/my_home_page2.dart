@@ -9,29 +9,8 @@ class MyHomePage2 extends StatelessWidget {
       appBar: AppBar(
         title: const Text("タイトル"),
       ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 高さとか幅を指定できる widget
-            SizedBox(
-              height: 150,
-              width: 100,
-              // 与えられた範囲に色を付ける widget
-              child: ColoredBox(
-                color: Colors.amber,
-                child: ListView.builder(
-                  itemCount: 30,
-                  itemBuilder: (context, index) {
-                    debugPrint("ListView の中");
-                    return Text(index.toString());
-                  },
-                ),
-              ),
-            ),
-            const Count(),
-          ],
-        ),
+      body: const Center(
+        child: Count(),
       ),
     );
   }
@@ -46,6 +25,7 @@ class Count extends StatefulWidget {
 
 class _CountState extends State<Count> {
   int _counter = 0;
+  int _counter2 = 1;
 
   void _incrementCounter() {
     setState(() {
@@ -59,6 +39,12 @@ class _CountState extends State<Count> {
     });
   }
 
+  void _twice() {
+    setState(() {
+      _counter2 = _counter2 * 2;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -68,7 +54,7 @@ class _CountState extends State<Count> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'You have pushed the button this many times:',
+              '足し算されてく:',
             ),
             Text(
               '$_counter',
@@ -76,16 +62,59 @@ class _CountState extends State<Count> {
             ),
           ],
         ),
-        IconButton(
-          onPressed: () {
-            _discrementCounter();
-          },
-          icon: const Icon(Icons.star_border),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              onPressed: () {
+                _discrementCounter();
+              },
+              child: const Text(
+                "マイナス",
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.blue),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                _incrementCounter();
+              },
+              child: const Text(
+                "プラス",
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.amber),
+              ),
+            ),
+          ],
         ),
-        FloatingActionButton(
-          onPressed: _incrementCounter,
-          child: const Icon(Icons.add),
-        )
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              '2倍されてく:',
+            ),
+            Text(
+              '$_counter2',
+              style: Theme.of(context).textTheme.headline4,
+            ),
+          ],
+        ),
+        TextButton(
+          onPressed: () {
+            _twice();
+          },
+          child: const Text(
+            "2倍",
+            style: TextStyle(color: Colors.white),
+          ),
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(Colors.pink),
+          ),
+        ),
       ],
     );
   }
