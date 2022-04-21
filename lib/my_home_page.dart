@@ -21,12 +21,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Scaffold は土台みたいな感じ（白紙みたいな）
     return Scaffold(
+      // AppBar は上のヘッダー
       appBar: AppBar(
         title: Text(widget.title),
       ),
+      // Center で真ん中に Text を表示している
       body: Center(
-        child: Column(
+        // Column は [] の中身を縦に並べてくれる widget
+        // Row で横になるよ
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
@@ -39,6 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
+      // 右下のプラスボタン
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
