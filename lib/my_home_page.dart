@@ -43,6 +43,43 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            // マス目は GridView で書ける！
+            SizedBox(
+              height: 300,
+              width: 300,
+              child: GridView.count(
+                crossAxisCount: 3,
+                children: [
+                  for (var i = 0; i < 9; i++)
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: ColoredBox(
+                        color: Colors.amber,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // 愚直に書いてもOK
+            // Column(
+            //   children: [
+            //     for (var i = 0; i < 3; i++)
+            //       Row(
+            //         mainAxisSize: MainAxisSize.min,
+            //         children: [
+            //           for (var i = 0; i < 3; i++)
+            //             const Padding(
+            //               padding: EdgeInsets.all(8.0),
+            //               child: SizedBox(
+            //                 width: 40,
+            //                 height: 40,
+            //                 child: ColoredBox(color: Colors.amber),
+            //               ),
+            //             ),
+            //         ],
+            //       ),
+            //   ],
+            // ),
           ],
         ),
       ),
