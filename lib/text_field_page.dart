@@ -22,6 +22,7 @@ class MyTextFiled extends StatefulWidget {
 }
 
 class _MyTextFieldState extends State<MyTextFiled> {
+  String tmpText = "";
   String showText = "";
 
   @override
@@ -33,10 +34,18 @@ class _MyTextFieldState extends State<MyTextFiled> {
           child: TextField(
             onChanged: ((value) {
               setState(() {
-                showText = value;
+                tmpText = value;
               });
             }),
           ),
+        ),
+        IconButton(
+          onPressed: () {
+            setState(() {
+              showText = tmpText;
+            });
+          },
+          icon: const Icon(Icons.arrow_downward),
         ),
         Text(showText),
       ],
