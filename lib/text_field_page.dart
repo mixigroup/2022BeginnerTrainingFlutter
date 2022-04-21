@@ -5,25 +5,41 @@ class TextFieldPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String showText = "";
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("テキストフィールドを使ってみよう！"),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              onChanged: ((value) {
+      body: const MyTextFiled(),
+    );
+  }
+}
+
+class MyTextFiled extends StatefulWidget {
+  const MyTextFiled({Key? key}) : super(key: key);
+
+  @override
+  State<MyTextFiled> createState() => _MyTextFieldState();
+}
+
+class _MyTextFieldState extends State<MyTextFiled> {
+  String showText = "";
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            onChanged: ((value) {
+              setState(() {
                 showText = value;
-              }),
-            ),
+              });
+            }),
           ),
-          Text(showText),
-        ],
-      ),
+        ),
+        Text(showText),
+      ],
     );
   }
 }
