@@ -55,6 +55,22 @@ class _MyHomePageState extends State<MyHomePage> {
           // 自分のサイズの分だけ持ちたい場合は size に min を指定してあげる
           mainAxisSize: MainAxisSize.min,
           children: [
+            // 高さとか幅を指定できる widget
+            SizedBox(
+              height: 150,
+              width: 100,
+              // 与えられた範囲に色を付ける widget
+              child: ColoredBox(
+                color: Colors.amber,
+                child: ListView.builder(
+                  itemCount: 30,
+                  itemBuilder: (context, index) {
+                    debugPrint("ListView の中");
+                    return Text(index.toString());
+                  },
+                ),
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
