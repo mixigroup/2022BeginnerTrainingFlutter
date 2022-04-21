@@ -1,3 +1,4 @@
+import 'package:beginner_training_flutter/first_page.dart';
 import 'package:beginner_training_flutter/my_home_page.dart'; // 移動させたので import してね！
 import 'package:flutter/material.dart';
 
@@ -37,7 +38,7 @@ class MyApp extends StatelessWidget {
       ),
       // 最初に表示させるページをは下の MyHomePage だね
       // 引数として title 渡してる（無くてもいいよ）
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const FirstPage(),
     );
   }
 }
