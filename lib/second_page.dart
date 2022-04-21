@@ -5,6 +5,23 @@ class SecondPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text("Second")));
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Second"),
+            IconButton(
+              onPressed: () {
+                // 戻るときは push じゃなく pop
+                // Navigator.pushNamed(context, "/");  // これはさらに追加されちゃう！
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.arrow_back),
+            )
+          ],
+        ),
+      ),
+    );
   }
 }
