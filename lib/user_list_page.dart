@@ -79,9 +79,34 @@ class UserListPage extends StatelessWidget {
             if (snapshot.hasError) {
               return const Text("受け止められんかった😭");
             }
-            // データを持てたら表示してあげる！
-            if (snapshot.hasData) {
-              return Text(snapshot.data.toString());
+            final result = snapshot.data;
+            // データを持ってたら表示してあげる！
+            if (result != null) {
+              var users = [];
+              // 見やすいように，受け取った result の data を users に格納
+              final data = result.data;
+              if (data != null) {
+                users = data["userList"];
+              }
+
+              return ListView.builder(
+                // users の userList に入ってる数を length で取得
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  // userList の1番目〜2番目〜などを user に渡してそれらの name や id を表示
+                  final user = users[index];
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "名前は" + user["name"].toString(),
+                      ),
+                      Text("IDは" + user["id"].toString()),
+                      const Text("----"),
+                    ],
+                  );
+                },
+              );
             }
             // データもないしエラーもきてない => まだ届いてきてない ってことなのでローディングを表示してあげよう！
             return const Text("Loading...");
