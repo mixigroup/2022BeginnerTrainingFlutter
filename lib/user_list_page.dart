@@ -5,7 +5,7 @@ class UserListPage extends StatelessWidget {
   const UserListPage({Key? key}) : super(key: key);
 
   // クエリ呼ぶメソッド生やすよ！
-  void callQuery() async {
+  Future<QueryResult<Object?>> callQuery() async {
     // 接続先
     final _httpLink =
         HttpLink("https://serene-garden-89220.herokuapp.com/query");
@@ -61,16 +61,33 @@ class UserListPage extends StatelessWidget {
     // 返ってきた result をログに書く！
     // でも多分見にくいのでターミナルで v 押して devtool の network で見てみよう
     debugPrint(result.toString());
+
+    return result;
   }
 
   @override
   Widget build(BuildContext context) {
-    // 上で実装したクエリ呼ぶやつ呼んであげる
-    callQuery();
-
-    // 表示は適当に…
-    return const Scaffold(
-      body: Center(child: Text("うなうな")),
+    return Scaffold(
+      body: Center(
+        // Future で返ってくるものは FutureBuilder で受け止める！
+        child: FutureBuilder(
+          // callQuery() を呼ぶと result が Future で返ってくる
+          future: callQuery(),
+          // それを snapshot が受け止める！
+          builder: (_, AsyncSnapshot<QueryResult<Object?>> snapshot) {
+            // snapshot は受け止めたデータもしくはエラーだったらエラーを持つ
+            if (snapshot.hasError) {
+              return const Text("受け止められんかった😭");
+            }
+            // データを持てたら表示してあげる！
+            if (snapshot.hasData) {
+              return Text(snapshot.data.toString());
+            }
+            // データもないしエラーもきてない => まだ届いてきてない ってことなのでローディングを表示してあげよう！
+            return const Text("Loading...");
+          },
+        ),
+      ),
     );
   }
 }
