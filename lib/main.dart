@@ -1,4 +1,6 @@
+import 'package:beginner_training_flutter/first_page.dart';
 import 'package:beginner_training_flutter/my_home_page.dart'; // 移動させたので import してね！
+import 'package:beginner_training_flutter/second_page.dart';
 import 'package:flutter/material.dart';
 
 // 中枢！main.dart の main() が最初に呼ばれる
@@ -29,15 +31,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // メインカラーは青色指定がされてる
-        // ここを変えると AppBar とかの色が変わる
-        // Colors は用意してくれてる！
-        // Hotreload をすると色が変わるよ
         primarySwatch: Colors.pink,
       ),
-      // 最初に表示させるページをは下の MyHomePage だね
-      // 引数として title 渡してる（無くてもいいよ）
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      initialRoute: '/',
+      routes: <String, WidgetBuilder>{
+        '/': (BuildContext context) => const FirstPage(),
+        '/second': (BuildContext context) => const SecondPage(),
+      },
     );
   }
 }
