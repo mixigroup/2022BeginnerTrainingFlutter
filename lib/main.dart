@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 // 中枢！main.dart の main() が最初に呼ばれる
 void main() {
   // 下の MyApp() を run するよ〜
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 // こちらが MyApp
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   // クラスが作られたときにクラス内で使う変数を初期化するためのもの
   // 今回は変数がないのでデフォルトの Key のみ突っ込まれてる
   // Key, super の説明は今回は省略
-  const MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
   // もしクラスに変数があったらこんな感じで書く
   // 上の main() で `MyApp(hoge: "ほげりんちょ")` みたいに渡してあげると hoge には『ほげりんちょ』が代入される
   // const MyApp({Key? key, required this.hoge}) : super(key: key);
@@ -28,16 +28,29 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        // メインカラーは青色指定がされてる
-        // ここを変えると AppBar とかの色が変わる
-        // Colors は用意してくれてる！
-        // Hotreload をすると色が変わるよ
-        primarySwatch: Colors.pink,
-      ),
+      // OS のテーマ設定に合わせて変更できる
+      theme: lightTheme,
+      darkTheme: darkTheme,
       // 最初に表示させるページをは下の MyHomePage だね
       // 引数として title 渡してる（無くてもいいよ）
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
+
+  // 標準で ThemeData.light() とか用意してくれてる
+  // 色変えたかったら下記みたいに変える！
+  final lightTheme = ThemeData.from(
+    colorScheme: const ColorScheme.light(
+      primary: Colors.amber,
+      onPrimary: Colors.white,
+      secondary: Colors.green,
+    ),
+  );
+  final darkTheme = ThemeData.from(
+    colorScheme: const ColorScheme.dark(
+      primary: Colors.blue,
+      onPrimary: Colors.white,
+      secondary: Colors.blueAccent,
+    ),
+  );
 }
