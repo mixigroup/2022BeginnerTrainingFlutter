@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
 
-class UserListPage extends StatelessWidget {
+class UserListPage extends StatefulWidget {
   const UserListPage({Key? key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => UserListPageState();
+}
+
+class UserListPageState extends State<UserListPage> {
+  // State 宣言！
+  List users = [];
+  bool loading = false;
 
   // クエリ呼ぶメソッド生やすよ！
   void callQuery() async {
@@ -62,16 +71,63 @@ query userListPage {
     // 返ってきた result をログに書く！
     // でも多分見にくいのでターミナルで v 押して devtool の network で見てみよう
     debugPrint(result.toString());
+
+    // 返ってきた result のデータがあったら users にぶちこむ
+    final data = result.data;
+    if (data != null) {
+      setState(() {
+        users = data["userList"];
+      });
+    }
+
+    // data が取れてもエラーでも loading は false に戻す
+    setState(() {
+      loading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // 上で実装したクエリ呼ぶやつ呼んであげる
-    callQuery();
-
-    // 表示は適当に…
-    return const Scaffold(
-      body: Center(child: Text("うなうな")),
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ボタンが押されたらクエリを呼ぶ！
+            IconButton(
+                onPressed: () {
+                  // ボタン押したら loading を true に
+                  setState(() {
+                    loading = true;
+                  });
+                  callQuery();
+                },
+                icon: const Icon(Icons.refresh)),
+            // loading フラグが true の時は Loading... と表示
+            if (loading) ...[
+              const Text("Loading…"),
+            ],
+            // users が null じゃないとき（クエリでデータが返ってきたとき）はそれを表示！
+            if (users.isNotEmpty) ...[
+              SizedBox(
+                height: 350,
+                child: ListView.builder(
+                  itemCount: users.length,
+                  itemBuilder: (_, index) {
+                    return Column(
+                      children: [
+                        Text(users[index]["name"]),
+                        Text(users[index]["id"]),
+                        const Text("----"),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
