@@ -117,9 +117,9 @@ query userListPage {
                 },
               ),
             ),
-            // ここにIDを受け取るテキストフィールドと表示するウィジェットを増やす！
+            // ここにユーザ登録するためのテキストフィールドと表示するウィジェットを増やす！
             // テキストフィールドは Stateful なので分けよう
-            const FindUserAndShow(),
+            const UserRegister(),
           ],
         ),
       ),
@@ -127,72 +127,90 @@ query userListPage {
   }
 }
 
-class FindUserAndShow extends StatefulWidget {
-  const FindUserAndShow({Key? key}) : super(key: key);
+class UserRegister extends StatefulWidget {
+  const UserRegister({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => FindUserAndShowState();
+  State<StatefulWidget> createState() => UserRegisterwState();
 }
 
-class FindUserAndShowState extends State<FindUserAndShow> {
+class UserRegisterwState extends State<UserRegister> {
+  // 今回はユーザ登録に３つ情報が必要！
   String userId = '';
-  String id = '';
   String name = '';
-  String error = '';
+  String password = '';
 
-  void callQuery() async {
-    debugPrint(userId);
-    setState(() {
-      error = '';
-      id = '';
-      name = '';
-    });
-
+  void callMutation() async {
+    // 今度は query じゃなくて mutation
     // 引数の受け取り方
-    // 名付けたクエリ名（FindUserAndShow）のところで引数を宣言（今回は String! 型の hikisuu を使うで〜って宣言）
+    // 名付けたミューテーション名（createUserMutation）のところで引数を宣言（今回は String! 型の inputName や inputUserId を使うで〜って宣言）
     // ▲ここの型は graphql のスキーマに合わせてあげてください
-    // 呼び出すクエリ（user）のところで引数を渡してあげる（今回は userId に hikisuu を渡してあげてる）
+    // 呼び出すミューテーション（cteateUser）のところで引数を渡してあげる（今回は name に inputName を渡してあげてる）
     // $ がついてると生のテキストから変数になれる！
-    const String getUserQuery = r'''
-query FindUserAndShow($hikisuu: String!) {
-  user(userId: $hikisuu) {
+    const String createUserMutation = r'''
+mutation UserRegister($inputName: String!, $inputUserId: String!, $inputPassword: String!) {
+  createUser(name: $inputName, id: $inputUserId, password: $inputPassword) {
     name
     id
   }
 }
 ''';
 
-    final QueryOptions options = QueryOptions(
-      document: gql(getUserQuery),
+    final MutationOptions options = MutationOptions(
+      document: gql(createUserMutation),
       // ここで引数を渡してあげる！
-      // 上のクエリ文で定義した　hikisuu 君に State の userId を渡してあげよう！
+      // 上のミューテーション文で定義した inputName に State の name を渡してあげよう！
       variables: <String, dynamic>{
-        'hikisuu': userId,
+        'inputName': name,
+        'inputUserId': userId,
+        'inputPassword': password,
       },
     );
-    // クエリ実行
-    final QueryResult result = await client.query(options);
+    // .mutate でミューテーション実行！！
+    final QueryResult result = await client.mutate(options);
 
-    // もしエラーを取得したらログに出す
+    // もしエラーを取得したら
     final exception = result.exception;
     if (exception != null) {
       debugPrint("エラーだった：" + result.exception.toString());
-      // error に受け取ったエラーをぶっ込んであげる
+      // ダイアログを出してあげる！
       setState(() {
-        // error = result.exception.toString();
-        // ▼具体的なエラーだけ表示したい場合は graphqlErrors 配列の一番最初の message に入ってるのでそれを入れてあげてください
-        error = exception.graphqlErrors.first.message;
+        showDialog(
+          context: context,
+          builder: (_) {
+            return AlertDialog(
+              title: const Text("ユーザ登録失敗🥺"),
+              content: Text(exception.graphqlErrors.toString()),
+              actions: [
+                TextButton(
+                  child: const Text("OK"),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            );
+          },
+        );
       });
     }
 
-    // もしデータ取得できてたら id と name につっこんであげる
+    // もしユーザ登録が成功していたら id と name が返ってくるのでデータが存在する
+    // 成功してもダイアログ出してあげよう！
     final data = result.data;
     if (data != null) {
-      final user = data["user"];
-      setState(() {
-        id = user["id"];
-        name = user["name"];
-      });
+      showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+            title: const Text("ユーザ登録成功！🌟"),
+            actions: [
+              TextButton(
+                child: const Text("OK"),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -201,9 +219,20 @@ query FindUserAndShow($hikisuu: String!) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: TextField(
-            decoration: const InputDecoration(hintText: "IDを入力！"),
+            decoration: const InputDecoration(hintText: "名前を入力"),
+            onChanged: (value) {
+              setState(() {
+                name = value;
+              });
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: TextField(
+            decoration: const InputDecoration(hintText: "IDを入力"),
             onChanged: (value) {
               setState(() {
                 userId = value;
@@ -211,19 +240,23 @@ query FindUserAndShow($hikisuu: String!) {
             },
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: TextField(
+            decoration: const InputDecoration(hintText: "パスワードを入力"),
+            // obscureText を true にするとよくあるパスワード隠しモードになる
+            obscureText: true,
+            onChanged: (value) {
+              setState(() {
+                password = value;
+              });
+            },
+          ),
+        ),
         IconButton(
-          onPressed: callQuery,
+          onPressed: callMutation,
           icon: const Icon(Icons.get_app),
         ),
-        // もし id と name が空文字じゃなかったら（データをクエリで受け取れていたら）表示！
-        if (id != '' && name != '') ...[
-          Text(id),
-          Text(name),
-        ],
-        // もしクエリでエラーを受け取っていたらそれを表示
-        if (error != '') ...[
-          Text(error),
-        ],
       ],
     );
   }
