@@ -15,14 +15,15 @@ class UserListPage extends StatelessWidget {
 
     // これがユーザ一覧を取得するための Query を呼ぶやつ
     // query <<名付けたクエリ名>> { <<呼びたい Query>> } って感じで書く
+    // ''' で生のテキストとして認識される（改行やタブも認識）<= row string っていう
     const String getUserListQuery = r'''
-      query userListPage {
-        userList {
-          name
-          id
-        }
-      }
-    ''';
+query userListPage {
+  userList {
+    name
+    id
+  }
+}
+''';
     // 例えば『リストページではユーザリストと会社リストの情報が欲しい！』ってときに
     // ▼こんな感じで名付けたクエリの中で複数の Query を呼ぶことができる！
     // （実際カンパニーリストクエリはAPIにないからこのコードは動かないです🙇🏻‍♀️）
