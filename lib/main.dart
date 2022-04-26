@@ -1,4 +1,5 @@
 import 'package:beginner_training_flutter/my_home_page.dart'; // 移動させたので import してね！
+import 'package:beginner_training_flutter/text_field_page.dart';
 import 'package:flutter/material.dart';
 
 // 中枢！main.dart の main() が最初に呼ばれる
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
       darkTheme: darkTheme,
       // 最初に表示させるページをは下の MyHomePage だね
       // 引数として title 渡してる（無くてもいいよ）
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const TextFieldPage(),
     );
   }
 
