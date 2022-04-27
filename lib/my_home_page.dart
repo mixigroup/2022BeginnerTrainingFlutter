@@ -38,6 +38,12 @@ class _MyHomePageState extends State<MyHomePage> {
   // print 文を入れてログを見てみよう
   @override
   Widget build(BuildContext context) {
+    // setState は state を変更したあとに build を行わせる（dirtyフラグを立てる）メソッドなので build をしている最中には使いません🙅‍♀️
+    // ▼ NG 例
+    // setState(() {
+    //   _counter++;
+    // });
+
     debugPrint("build の中");
 
     // Scaffold は土台みたいな感じ（白紙みたいな）
