@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
 import 'package:uuid/uuid.dart';
 
+// 回答の結果は char と position と judge が返ってくるのでそれを格納するためのクラスを用意
+class Answer {
+  const Answer({
+    required this.char,
+    required this.position,
+    required this.judge,
+  });
+  final String char;
+  final int position;
+  final String judge;
+}
+
 class WordlePage extends StatelessWidget {
   const WordlePage({Key? key}) : super(key: key);
   @override
@@ -45,6 +57,11 @@ class CorrectWordState extends State<CorrectWord> {
   List answerResult = [];
 
   void answer() async {
+    // 2回目以降，次回答するときにどんどん add されてしまうので空にしてあげる
+    setState(() {
+      answerResult = [];
+    });
+
     const String answerWordQuery = r'''
 mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) {
   answerWord(wordId: $wordId, word: $word, userId: $userId) {
@@ -73,13 +90,23 @@ mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) 
     }
 
     final data = result.data;
-    // データがあったら
     if (data != null) {
-      // answerWord に data["answerWord"] を代入！
       final answerWord = data["answerWord"];
-      // State に返ってきた結果代入！
+      // chars はリストで返ってくるので List として answer に格納
+      final answer = answerWord["chars"] as List;
+      // answer の中身をひとつづつ見ていく
       setState(() {
-        answerResult = answerWord["chars"];
+        for (var a in answer) {
+          // 上で作った Answer クラスに合わせて代入していく
+          // answerResult 配列に追加してく！
+          answerResult.add(
+            Answer(
+              char: a["char"],
+              position: a["position"],
+              judge: a["judge"],
+            ),
+          );
+        }
       });
     }
 
@@ -200,7 +227,52 @@ query correctWordQuery($wordId: String!) {
           ),
           // もし結果が返ってきてたらそれを表示
           if (answerResult.isNotEmpty) ...[
-            Text(answerResult.toString()),
+            // for で回してもいいけど4文字だし row で…
+            Row(
+              children: [
+                Column(
+                  children: [
+                    // answerResult に追加してった一つ目の結果を表示
+                    Text(
+                      answerResult[0].char,
+                      style: const TextStyle(fontSize: 90),
+                    ),
+                    Text(answerResult[0].judge),
+                  ],
+                ),
+                // Spacer() は平等に間隔を空けてくれるものです！
+                const Spacer(),
+                Column(
+                  children: [
+                    Text(
+                      answerResult[1].char,
+                      style: const TextStyle(fontSize: 90),
+                    ),
+                    Text(answerResult[1].judge),
+                  ],
+                ),
+                const Spacer(),
+                Column(
+                  children: [
+                    Text(
+                      answerResult[2].char,
+                      style: const TextStyle(fontSize: 90),
+                    ),
+                    Text(answerResult[2].judge),
+                  ],
+                ),
+                const Spacer(),
+                Column(
+                  children: [
+                    Text(
+                      answerResult[3].char,
+                      style: const TextStyle(fontSize: 90),
+                    ),
+                    Text(answerResult[3].judge),
+                  ],
+                ),
+              ],
+            ),
           ],
         ],
       ),
