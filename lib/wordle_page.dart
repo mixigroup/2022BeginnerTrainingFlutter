@@ -29,21 +29,76 @@ class CorrectWord extends StatefulWidget {
 }
 
 class CorrectWordState extends State<CorrectWord> {
+  final String userId = "kunokuno"; // ここはさっき覚えておいて欲しいと言ったユーザID…！
+
   // State として word と mean を持っておく
   String word = "";
   String mean = "";
   // 余力があれば loading も持っておこう
   bool loading = false;
 
-  // クエリを呼ぶメソッド
-  void callQuery() async {
+  // 回答にも wordId を使いたいので持っておく
+  String wordId = "";
+  // テキストフィールドで受け取る回答
+  String answerWord = "";
+  // 結果（結果を受け取ったら再レンダリングさせて表示させるために State で持っておく）
+  List answerResult = [];
+
+  void answer() async {
+    const String answerWordQuery = r'''
+mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) {
+  answerWord(wordId: $wordId, word: $word, userId: $userId) {
+    chars {
+      position
+      char
+      judge
+  	}
+  }
+}
+''';
+
+    final MutationOptions options = MutationOptions(
+      document: gql(answerWordQuery),
+      variables: <String, dynamic>{
+        'wordId': wordId,
+        'word': answerWord,
+        'userId': userId,
+      },
+    );
+
+    final QueryResult result = await client.mutate(options);
+
+    if (result.hasException) {
+      debugPrint("エラーだった：" + result.exception.toString());
+    }
+
+    final data = result.data;
+    // データがあったら
+    if (data != null) {
+      // answerWord に data["answerWord"] を代入！
+      final answerWord = data["answerWord"];
+      // State に返ってきた結果代入！
+      setState(() {
+        answerResult = answerWord["chars"];
+      });
+    }
+
+    debugPrint(wordId);
+    debugPrint(answerWord);
+    debugPrint(result.toString());
+  }
+
+  // わかりにくいのでメソッド名変更
+  void getWord() async {
     // UUID 生成
     const uuid = Uuid();
-    // その UUID を wordId とする
-    String wordId = uuid.v4();
+    // wordId を State として持っておく
+    setState(() {
+      wordId = uuid.v4();
+    });
+    debugPrint(wordId);
 
-    // クエリ
-    const String getCorrectWord = r'''
+    const String getCorrectWordQuery = r'''
 query correctWordQuery($wordId: String!) {
   correctWord(wordId: $wordId) {
     word
@@ -53,7 +108,7 @@ query correctWordQuery($wordId: String!) {
 ''';
 
     final QueryOptions options = QueryOptions(
-      document: gql(getCorrectWord),
+      document: gql(getCorrectWordQuery),
       variables: <String, dynamic>{
         // 引数に wordId 渡す
         'wordId': wordId,
@@ -78,6 +133,8 @@ query correctWordQuery($wordId: String!) {
         mean = correctWord["mean"];
       });
     }
+
+    debugPrint(result.toString());
 
     // データ取得されたらローディングは終わりなので false を代入
     setState(() {
@@ -105,7 +162,7 @@ query correctWordQuery($wordId: String!) {
               setState(() {
                 loading = true;
               });
-              callQuery();
+              getWord();
             },
             child: const Text(
               "4文字の英単語",
@@ -119,6 +176,32 @@ query correctWordQuery($wordId: String!) {
           // callQuery(); で値が setState されたら再描画されて word と mean が表示される！
           Text(word),
           Text(mean),
+          // こっから新規追加 ------------------------
+          // テキストフィールドで回答受けとって answerWord に代入
+          TextField(
+            onChanged: (value) {
+              setState(() {
+                answerWord = value;
+              });
+            },
+          ),
+          TextButton(
+            onPressed: () {
+              // 回答ミューテーションを実行！
+              answer();
+            },
+            child: const Text(
+              "回答する",
+              style: TextStyle(color: Colors.white),
+            ),
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Colors.blueGrey),
+            ),
+          ),
+          // もし結果が返ってきてたらそれを表示
+          if (answerResult.isNotEmpty) ...[
+            Text(answerResult.toString()),
+          ],
         ],
       ),
     );
