@@ -26,6 +26,14 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _decrementCounter() {
+    // setState 無しだと値は書き換わるが再レンダリングされない
+    // _counter--;
+    setState(() {
+      _counter--;
+    });
+  }
+
   // state が変わると　build 内が再レンダリングされる
   // print 文を入れてログを見てみよう
   @override
@@ -43,14 +51,25 @@ class _MyHomePageState extends State<MyHomePage> {
         // Column は [] の中身を縦に並べてくれる widget
         // Row で横になるよ
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const Text(
+                  'You have pushed the button this many times:',
+                ),
+                Text(
+                  '$_counter',
+                  style: Theme.of(context).textTheme.headline4,
+                ),
+              ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+            IconButton(
+              onPressed: () {
+                _decrementCounter();
+              },
+              icon: const Icon(Icons.star_border),
             ),
             // マス目は GridView で書ける！
             SizedBox(
