@@ -14,6 +14,28 @@ class Answer {
   final String judge;
 }
 
+// 四角たち状態を格納するためのクラスを用意
+class TileState {
+  TileState({
+    required this.times, // 何回目か
+    required this.position, // 何文字目か
+    required this.char, // 文字
+    required this.state, // 合ってるのか間違ってるのか存在はしてるのかなどの結果
+  });
+  int times;
+  int position;
+  String char;
+  CharState state;
+}
+
+// 合ってるか間違ってるのか存在はしてるのかなど，返ってくる結果を表したもの
+enum CharState {
+  CORRECT,
+  EXISTING,
+  NOTHING,
+  NO_ANSWER,
+}
+
 class WordlePage extends StatelessWidget {
   const WordlePage({Key? key}) : super(key: key);
   @override
@@ -42,19 +64,25 @@ class CorrectWord extends StatefulWidget {
 
 class CorrectWordState extends State<CorrectWord> {
   final String userId = "kunokuno"; // ここはさっき覚えておいて欲しいと言ったユーザID…！
+  final wordId = const Uuid().v4();
 
-  // State として word と mean を持っておく
-  String word = "";
-  String mean = "";
-  // 余力があれば loading も持っておこう
-  bool loading = false;
-
-  // 回答にも wordId を使いたいので持っておく
-  String wordId = "";
   // テキストフィールドで受け取る回答
   String answerWord = "";
   // 結果（結果を受け取ったら再レンダリングさせて表示させるために State で持っておく）
-  List answerResult = [];
+  List<Answer> answerResult = [];
+  int times = 0;
+
+  // 四角たちを初期化
+  // 4文字の英単語で5回チャレンジできるので20こ用意
+  List<TileState> tiles = List.generate(
+    20,
+    (i) => TileState(
+      times: 0,
+      position: 0,
+      char: "",
+      state: CharState.NO_ANSWER,
+    ),
+  );
 
   void answer() async {
     // 2回目以降，次回答するときにどんどん add されてしまうので空にしてあげる
@@ -91,9 +119,8 @@ mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) 
 
     final data = result.data;
     if (data != null) {
-      final answerWord = data["answerWord"];
       // chars はリストで返ってくるので List として answer に格納
-      final answer = answerWord["chars"] as List;
+      final answer = data["answerWord"]["chars"] as List;
       // answer の中身をひとつづつ見ていく
       setState(() {
         for (var a in answer) {
@@ -110,101 +137,37 @@ mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) 
       });
     }
 
+    // 四角たちの状態を代入
+    for (var answer in answerResult) {
+      if (answer.judge == "CORRECT") {
+        tiles[answer.position + (times * 4)].state = CharState.CORRECT;
+        tiles[answer.position + (times * 4)].char = answer.char;
+      } else if (answer.judge == "EXISTING") {
+        tiles[answer.position + (times * 4)].state = CharState.EXISTING;
+        tiles[answer.position + (times * 4)].char = answer.char;
+      } else if (answer.judge == "NOTHING") {
+        tiles[answer.position + (times * 4)].state = CharState.NOTHING;
+        tiles[answer.position + (times * 4)].char = answer.char;
+      }
+    }
+
+    // 回数を増やす
+    setState(() {
+      times++;
+    });
+
+    debugPrint(times.toString());
     debugPrint(wordId);
     debugPrint(answerWord);
     debugPrint(result.toString());
   }
 
-  // わかりにくいのでメソッド名変更
-  void getWord() async {
-    // UUID 生成
-    const uuid = Uuid();
-    // wordId を State として持っておく
-    setState(() {
-      wordId = uuid.v4();
-    });
-    debugPrint(wordId);
-
-    const String getCorrectWordQuery = r'''
-query correctWordQuery($wordId: String!) {
-  correctWord(wordId: $wordId) {
-    word
-    mean
-  }
-}
-''';
-
-    final QueryOptions options = QueryOptions(
-      document: gql(getCorrectWordQuery),
-      variables: <String, dynamic>{
-        // 引数に wordId 渡す
-        'wordId': wordId,
-      },
-    );
-
-    // クエリ実行！
-    final QueryResult result = await client.query(options);
-
-    if (result.hasException) {
-      debugPrint("エラーだった：" + result.exception.toString());
-    }
-
-    final data = result.data;
-    // もしデータがあったら
-    if (data != null) {
-      // correctWord に返ってきた data["correctWord"] を代入！
-      final correctWord = data["correctWord"];
-      // State に返ってきた値代入！
-      setState(() {
-        word = correctWord["word"];
-        mean = correctWord["mean"];
-      });
-    }
-
-    debugPrint(result.toString());
-
-    // データ取得されたらローディングは終わりなので false を代入
-    setState(() {
-      loading = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // もしローディングフラグが立ってたら『ローディング中…』のテキスト表示してあげる
-          if (loading) ...[
-            const Text(
-              "loading...",
-              style: TextStyle(color: Colors.blue),
-            ),
-          ],
-          TextButton(
-            onPressed: () {
-              // ボタン押したらクエリ呼ぶ
-              // クエリ呼んでる間はローディング中なのでローディングフラグを true へ
-              setState(() {
-                loading = true;
-              });
-              getWord();
-            },
-            child: const Text(
-              "4文字の英単語",
-              style: TextStyle(color: Colors.white),
-            ),
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.blueGrey),
-            ),
-          ),
-          // 最初は空文字が表示されてる
-          // callQuery(); で値が setState されたら再描画されて word と mean が表示される！
-          Text(word),
-          Text(mean),
-          // こっから新規追加 ------------------------
-          // テキストフィールドで回答受けとって answerWord に代入
           TextField(
             onChanged: (value) {
               setState(() {
@@ -225,112 +188,58 @@ query correctWordQuery($wordId: String!) {
               backgroundColor: MaterialStateProperty.all(Colors.blueGrey),
             ),
           ),
-          // もし結果が返ってきてたらそれを表示
-          if (answerResult.isNotEmpty) ...[
-            // for で回してもいいけど4文字だし row で…
-            Row(
+          SizedBox(
+            height: 600,
+            child: GridView.count(
+              crossAxisCount: 4,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    height: 70,
-                    width: 70,
-                    child: ColoredBox(
-                      // judge の結果によって色を変えてあげる
-                      // ? : の記法は３項演算子といいます
-                      // (条件) ? （true だった場合） : （false だった場合）って感じで書きます！
-                      color: (answerResult[0].judge == "CORRECT")
-                          ? Colors.green
-                          : (answerResult[0].judge == "EXISTING")
-                              ? Colors.amber
-                              : Colors.grey,
-                      child: Center(
-                        child: Text(
-                          // answerResult に追加してった一つ目の結果を表示
-                          answerResult[0].char,
-                          style: const TextStyle(
-                            fontSize: 50,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
+                for (var tile in tiles)
+                  Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: _tile(tile),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    height: 70,
-                    width: 70,
-                    child: ColoredBox(
-                      color: (answerResult[1].judge == "CORRECT")
-                          ? Colors.green
-                          : (answerResult[1].judge == "EXISTING")
-                              ? Colors.amber
-                              : Colors.grey,
-                      child: Center(
-                        child: Text(
-                          answerResult[1].char,
-                          style: const TextStyle(
-                            fontSize: 50,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    height: 70,
-                    width: 70,
-                    child: ColoredBox(
-                      color: (answerResult[2].judge == "CORRECT")
-                          ? Colors.green
-                          : (answerResult[2].judge == "EXISTING")
-                              ? Colors.amber
-                              : Colors.grey,
-                      child: Center(
-                        child: Text(
-                          answerResult[2].char,
-                          style: const TextStyle(
-                            fontSize: 50,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    height: 70,
-                    width: 70,
-                    child: ColoredBox(
-                      color: (answerResult[3].judge == "CORRECT")
-                          ? Colors.green
-                          : (answerResult[3].judge == "EXISTING")
-                              ? Colors.amber
-                              : Colors.grey,
-                      child: Center(
-                        child: Text(
-                          answerResult[3].char,
-                          style: const TextStyle(
-                            fontSize: 50,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
-          ],
+          ),
         ],
       ),
     );
   }
+}
+
+Widget _tile(TileState tileState) {
+  // 四角の状態によって背景色を変える
+  Color boxBackgroundColor = Colors.white;
+  if (tileState.state == CharState.CORRECT) {
+    boxBackgroundColor = Colors.green;
+  } else if (tileState.state == CharState.EXISTING) {
+    boxBackgroundColor = Colors.amber;
+  } else if (tileState.state == CharState.NOTHING) {
+    boxBackgroundColor = Colors.grey;
+  }
+
+  return Padding(
+    padding: const EdgeInsets.all(4.0),
+    // DecoratedBox は四角に枠線つけたりデコれる widget💓
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        // 枠線の色
+        border: Border.all(color: Colors.blueGrey),
+        color: boxBackgroundColor,
+        // 枠線の角丸
+        borderRadius: BorderRadius.circular(10),
+      ),
+      // 真ん中に文字表示
+      child: Center(
+        child: Text(
+          tileState.char,
+          style: const TextStyle(
+            fontSize: 60,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    ),
+  );
 }
