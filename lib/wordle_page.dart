@@ -230,46 +230,101 @@ query correctWordQuery($wordId: String!) {
             // for で回してもいいけど4文字だし row で…
             Row(
               children: [
-                Column(
-                  children: [
-                    // answerResult に追加してった一つ目の結果を表示
-                    Text(
-                      answerResult[0].char,
-                      style: const TextStyle(fontSize: 90),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    height: 70,
+                    width: 70,
+                    child: ColoredBox(
+                      // judge の結果によって色を変えてあげる
+                      // ? : の記法は３項演算子といいます
+                      // (条件) ? （true だった場合） : （false だった場合）って感じで書きます！
+                      color: (answerResult[0].judge == "CORRECT")
+                          ? Colors.green
+                          : (answerResult[0].judge == "EXISTING")
+                              ? Colors.amber
+                              : Colors.grey,
+                      child: Center(
+                        child: Text(
+                          // answerResult に追加してった一つ目の結果を表示
+                          answerResult[0].char,
+                          style: const TextStyle(
+                            fontSize: 50,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
-                    Text(answerResult[0].judge),
-                  ],
+                  ),
                 ),
-                // Spacer() は平等に間隔を空けてくれるものです！
-                const Spacer(),
-                Column(
-                  children: [
-                    Text(
-                      answerResult[1].char,
-                      style: const TextStyle(fontSize: 90),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    height: 70,
+                    width: 70,
+                    child: ColoredBox(
+                      color: (answerResult[1].judge == "CORRECT")
+                          ? Colors.green
+                          : (answerResult[1].judge == "EXISTING")
+                              ? Colors.amber
+                              : Colors.grey,
+                      child: Center(
+                        child: Text(
+                          answerResult[1].char,
+                          style: const TextStyle(
+                            fontSize: 50,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
-                    Text(answerResult[1].judge),
-                  ],
+                  ),
                 ),
-                const Spacer(),
-                Column(
-                  children: [
-                    Text(
-                      answerResult[2].char,
-                      style: const TextStyle(fontSize: 90),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    height: 70,
+                    width: 70,
+                    child: ColoredBox(
+                      color: (answerResult[2].judge == "CORRECT")
+                          ? Colors.green
+                          : (answerResult[2].judge == "EXISTING")
+                              ? Colors.amber
+                              : Colors.grey,
+                      child: Center(
+                        child: Text(
+                          answerResult[2].char,
+                          style: const TextStyle(
+                            fontSize: 50,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
-                    Text(answerResult[2].judge),
-                  ],
+                  ),
                 ),
-                const Spacer(),
-                Column(
-                  children: [
-                    Text(
-                      answerResult[3].char,
-                      style: const TextStyle(fontSize: 90),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    height: 70,
+                    width: 70,
+                    child: ColoredBox(
+                      color: (answerResult[3].judge == "CORRECT")
+                          ? Colors.green
+                          : (answerResult[3].judge == "EXISTING")
+                              ? Colors.amber
+                              : Colors.grey,
+                      child: Center(
+                        child: Text(
+                          answerResult[3].char,
+                          style: const TextStyle(
+                            fontSize: 50,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
-                    Text(answerResult[3].judge),
-                  ],
+                  ),
                 ),
               ],
             ),
