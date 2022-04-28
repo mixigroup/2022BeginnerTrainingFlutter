@@ -152,13 +152,78 @@ mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) 
     }
 
     // 回数を増やす
+    // 四角の状態も setState
     setState(() {
       times++;
+      tiles = tiles;
     });
+
+    // 5回だったら回答クエリを読んでダイアログを表示！！！
+    if (times == 5) {
+      getWord();
+    }
 
     debugPrint(times.toString());
     debugPrint(wordId);
     debugPrint(answerWord);
+    debugPrint(result.toString());
+  }
+
+  // 答えを取得するクエリを呼ぶメソッド追加！
+  void getWord() async {
+    debugPrint(wordId);
+
+    const String getCorrectWordQuery = r'''
+query correctWordQuery($wordId: String!) {
+  correctWord(wordId: $wordId) {
+    word
+    mean
+  }
+}
+''';
+
+    final QueryOptions options = QueryOptions(
+      document: gql(getCorrectWordQuery),
+      variables: <String, dynamic>{
+        'wordId': wordId,
+      },
+    );
+
+    final QueryResult result = await client.query(options);
+
+    if (result.hasException) {
+      debugPrint("エラーだった：" + result.exception.toString());
+    }
+
+    final data = result.data;
+    if (data != null) {
+      final correctWord = data["correctWord"];
+      // ダイアログは標準で用意されている showDialog メソッドを呼ぶと表示される！
+      showDialog(
+        context: context,
+        builder: (_) {
+          // よく見るタイトルと本文とOK/キャンセルなどのボタンを表示するダイアログが標準で AlertDialog として用意されている
+          return AlertDialog(
+            title: const Text("答え"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("単語：" + correctWord["word"]),
+                Text("意味：" + correctWord["mean"]),
+              ],
+            ),
+            actions: [
+              TextButton(
+                // ダイアログは画面が上に乗っかるのでそれを取り除くために pop をすると閉じる
+                onPressed: () => Navigator.pop(context),
+                child: const Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
     debugPrint(result.toString());
   }
 
