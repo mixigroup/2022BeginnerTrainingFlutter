@@ -1,16 +1,27 @@
 # beginner_training_flutter
 
-A new Flutter project.
+## 概要
+22新卒向け Flutter 研修で使用するリポジトリです．
+説明に合わせてブランチ・PR を分けてあるので，説明が追いつかなかったりしたらコードやコミットメッセージを参考にしてください👀
 
-## Getting Started
+また研修の後半ではチームで4文字版 [wordle](https://www.nytimes.com/games/wordle/index.html) のアプリを作ってもらいます🔍✨
+参考コードは challange ディレクトリのブランチに上がってます．スライドの challange #1~#6 ごとにブランチ・PR が別れているので参考にしてください！
 
-This project is a starting point for a Flutter application.
+## 環境
+```
+Flutter 2.10.1
+Xcode 13.2.1
+Android Studio Arctic Fox | 2020.3.1
+```
 
-A few resources to get you started if this is your first Flutter project:
+## 動かし方
+このリポジトリをクローンし，そのディレクトリに移動したら `flutter run` をしてください． 
+エミュレータでも実機でも動きます．動かし方はスライドの p18 あたりからを参考にしてください✌️
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+https://user-images.githubusercontent.com/23455702/170669049-ec6057e7-4280-4592-ac35-2661404337ba.mov
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+## Note
+API に接続せずとも wordle もどきは実装できます！ぜひチャレンジしてみてください🌟
+また，現状 gql 文をベタ書きで書いてしまっているのですが artemis などを使用し型を自動生成することもできます．
+今回は触れなかった部分でまだまだ改良の余地があるのでぜひ色々触ってもらえたら嬉しいです❣️
