@@ -1,3 +1,4 @@
+import 'package:beginner_training_flutter/keyboard.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql/client.dart';
 import 'package:uuid/uuid.dart';
@@ -36,6 +37,16 @@ enum CharState {
   NO_ANSWER,
 }
 
+// 今何回目で何文字目なのかを表すためのクラスを用意
+class Cursor {
+  Cursor({
+    required this.currentTimes,
+    required this.currentPosition,
+  });
+  int currentTimes;
+  int currentPosition;
+}
+
 class WordlePage extends StatelessWidget {
   const WordlePage({Key? key}) : super(key: key);
   @override
@@ -66,11 +77,13 @@ class CorrectWordState extends State<CorrectWord> {
   final String userId = "kunokuno"; // ここはさっき覚えておいて欲しいと言ったユーザID…！
   final wordId = const Uuid().v4();
 
-  // テキストフィールドで受け取る回答
-  String answerWord = "";
+  // キーボードが押されて受け取る文字を配列に格納していく
+  // [m, i, x, i] みたいな感じ
+  List<String> answerWord = [];
   // 結果（結果を受け取ったら再レンダリングさせて表示させるために State で持っておく）
   List<Answer> answerResult = [];
-  int times = 0;
+  // 最初は試行0回，位置も0文字目
+  Cursor cursor = Cursor(currentTimes: 0, currentPosition: 0);
 
   // 四角たちを初期化
   // 4文字の英単語で5回チャレンジできるので20こ用意
@@ -85,10 +98,11 @@ class CorrectWordState extends State<CorrectWord> {
   );
 
   void answer() async {
-    // 2回目以降，次回答するときにどんどん add されてしまうので空にしてあげる
-    setState(() {
-      answerResult = [];
-    });
+    // 配列で受け取った文字を word に合算してく
+    String word = "";
+    for (var element in answerWord) {
+      word += element;
+    }
 
     const String answerWordQuery = r'''
 mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) {
@@ -106,7 +120,7 @@ mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) 
       document: gql(answerWordQuery),
       variables: <String, dynamic>{
         'wordId': wordId,
-        'word': answerWord,
+        'word': word,
         'userId': userId,
       },
     );
@@ -140,32 +154,36 @@ mutation answerWordMutation($wordId: String!, $word: String!, $userId: String!) 
     // 四角たちの状態を代入
     for (var answer in answerResult) {
       if (answer.judge == "CORRECT") {
-        tiles[answer.position + (times * 4)].state = CharState.CORRECT;
-        tiles[answer.position + (times * 4)].char = answer.char;
+        tiles[answer.position + (cursor.currentTimes * 4)].state = CharState.CORRECT;
+        tiles[answer.position + (cursor.currentTimes * 4)].char = answer.char;
       } else if (answer.judge == "EXISTING") {
-        tiles[answer.position + (times * 4)].state = CharState.EXISTING;
-        tiles[answer.position + (times * 4)].char = answer.char;
+        tiles[answer.position + (cursor.currentTimes * 4)].state = CharState.EXISTING;
+        tiles[answer.position + (cursor.currentTimes * 4)].char = answer.char;
       } else if (answer.judge == "NOTHING") {
-        tiles[answer.position + (times * 4)].state = CharState.NOTHING;
-        tiles[answer.position + (times * 4)].char = answer.char;
+        tiles[answer.position + (cursor.currentTimes * 4)].state = CharState.NOTHING;
+        tiles[answer.position + (cursor.currentTimes * 4)].char = answer.char;
       }
     }
 
     // 回数を増やす
     // 四角の状態も setState
     setState(() {
-      times++;
+      cursor.currentPosition = 0;
+      (cursor.currentTimes < 5) ? cursor.currentTimes++ : null;
       tiles = tiles;
+      // 2回目以降，次回答するときにどんどん add されてしまうので空にしてあげる
+      // 四角の状態をセットしたのでもう空にして大丈夫！
+      answerWord = [];
+      answerResult = [];
     });
 
     // 5回だったら回答クエリを読んでダイアログを表示！！！
-    if (times == 5) {
+    if (cursor.currentTimes == 5) {
       getWord();
     }
 
-    debugPrint(times.toString());
+    debugPrint(cursor.currentTimes.toString());
     debugPrint(wordId);
-    debugPrint(answerWord);
     debugPrint(result.toString());
   }
 
@@ -229,33 +247,15 @@ query correctWordQuery($wordId: String!) {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          TextField(
-            onChanged: (value) {
-              setState(() {
-                answerWord = value;
-              });
-            },
-          ),
-          TextButton(
-            onPressed: () {
-              // 回答ミューテーションを実行！
-              answer();
-            },
-            child: const Text(
-              "回答する",
-              style: TextStyle(color: Colors.white),
-            ),
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.blueGrey),
-            ),
-          ),
           SizedBox(
-            height: 600,
+            height: 500,
             child: GridView.count(
+              shrinkWrap: true,
               crossAxisCount: 4,
               children: [
                 for (var tile in tiles)
@@ -266,6 +266,43 @@ query correctWordQuery($wordId: String!) {
               ],
             ),
           ),
+          const Spacer(),
+          KeyBoard(
+            tiles: tiles,
+            count: cursor.currentTimes,
+            onTapEnter: () {
+              // 4文字に足りてないときはエンター押せないように（誤爆阻止）
+              (answerWord.length == 4) ? answer() : null;
+            },
+            onTapDelete: () {
+              setState(() {
+                // 回答配列の最後を削除してく
+                answerWord.removeAt(answerWord.length - 1);
+                // 四角は空文字にする
+                tiles[cursor.currentPosition + (cursor.currentTimes * 4) - 1]
+                    .char = "";
+                // カーソル位置を戻す
+                cursor.currentPosition--;
+              });
+            },
+            // 4文字よりたくさん打てないように
+            onTapAlphabet: (answerWord.length < 4)
+                ? (char) {
+                    setState(
+                      () {
+                        // 回答配列に追加してく
+                        answerWord.add(char);
+                        // キーボードで押された文字を char で受け取って四角の文字に表示
+                        tiles[cursor.currentPosition +
+                                (cursor.currentTimes * 4)]
+                            .char = char;
+                        // カーソル位置を増やす
+                        cursor.currentPosition++;
+                      },
+                    );
+                  }
+                : null,
+          ),
         ],
       ),
     );
@@ -275,12 +312,18 @@ query correctWordQuery($wordId: String!) {
 Widget _tile(TileState tileState) {
   // 四角の状態によって背景色を変える
   Color boxBackgroundColor = Colors.white;
+  // 四角の状態によって文字色を変える
+  // 回答ないときはグレー，あるとき（背景色がある場合）は白色へ
+  Color textColor = Colors.blueGrey;
   if (tileState.state == CharState.CORRECT) {
     boxBackgroundColor = Colors.green;
+    textColor = Colors.white;
   } else if (tileState.state == CharState.EXISTING) {
     boxBackgroundColor = Colors.amber;
+    textColor = Colors.white;
   } else if (tileState.state == CharState.NOTHING) {
     boxBackgroundColor = Colors.grey;
+    textColor = Colors.white;
   }
 
   return Padding(
@@ -298,9 +341,9 @@ Widget _tile(TileState tileState) {
       child: Center(
         child: Text(
           tileState.char,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 60,
-            color: Colors.white,
+            color: textColor,
             fontWeight: FontWeight.bold,
           ),
         ),
